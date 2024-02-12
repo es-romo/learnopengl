@@ -1,11 +1,17 @@
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <shader.h>
 #include <texture.h>
 #include <iostream>
 
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
+
+float mixValue = 0.2f;
 
 int main()
 {
@@ -54,7 +60,7 @@ int main()
     Shader textureShader("shaders/color.vert", "shaders/texture.frag");
 
     Texture containerTex("resources/container.jpg", false, false);
-    Texture guyTex("resources/guy.jpg", false, true);
+    Texture guyTex("resources/awesomeface.png", true, true);
 
     // First rectangle vertex data
     float firstRectangleVertices[] = {
@@ -71,10 +77,10 @@ int main()
 
     // Second rectangle vertex data
     float secondRectangleVertices[] = {
-         0.7f,  0.7f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,  // top right
-         0.7f, -0.3f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
-        -0.3f, -0.3f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-        -0.3f,  0.7f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top left 
+         0.5f,  0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
+         0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top left 
     };
 
     unsigned int secondRectangleIndices[] = {
@@ -137,6 +143,10 @@ int main()
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    textureShader.use();
+    textureShader.setInt("tex1", 0);
+    textureShader.setInt("tex2", 1);
+
     float timeValue, greenValue;
     int vertexColorLocation;
     while (!glfwWindowShouldClose(window))
@@ -148,23 +158,37 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Orange rect
-        uniformShader.use();
-        glBindVertexArray(VAOs[0]);
-        
-        timeValue = glfwGetTime();
-        greenValue = sin(timeValue) / 2.0f + 0.5f;
-        
-        uniformShader.setVec4f("color", 0.0f, greenValue, 0.0f, 1.0f);
+        //uniformShader.use();
+        //glBindVertexArray(VAOs[0]);
+        //
+        //timeValue = glfwGetTime();
+        //greenValue = sin(timeValue) / 2.0f + 0.5f;
+        //
+        //uniformShader.setVec4f("color", 0.0f, greenValue, 0.0f, 1.0f);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[0]);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[0]);
+        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        glm::mat4 transform(1.0f);
+        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        textureShader.setMat4fv("transform", &transform);
 
         // Yellow rect
-        textureShader.use();
-        containerTex.use();
+        textureShader.setFloat("mixValue", mixValue);
+        containerTex.activate(0);
+        guyTex.activate(1);
         glBindVertexArray(VAOs[1]);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[1]);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        glm::mat4 trans2(1.0f);
+        trans2 = glm::translate(trans2, glm::vec3(-0.5f, 0.5f, 0.0f));
+        float scale = 0.5f * (float)glm::sin(4 * glfwGetTime()) + 1.0f;
+        trans2 = glm::scale(trans2, glm::vec3(scale, scale, 1.0));
+        textureShader.setMat4fv("transform", &trans2);
+        
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
@@ -191,4 +215,13 @@ void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+    
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+        if (mixValue < 1.0f)
+            mixValue += 0.0001f;
+
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+        if (mixValue > 0.0f)
+            mixValue -= 0.0001f;
+        
 }
