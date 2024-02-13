@@ -11,7 +11,7 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 
-float mixValue = 0.2f;
+float worldx = 0.00f, worldy = 0.00f, worldz = 0;
 
 int main()
 {
@@ -50,9 +50,10 @@ int main()
     std::cout << "INFO::GL_MAX_VERTEX_ATTRIBS::" << nrAttributes << std::endl;
 
     // Backface culling
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CW);
+    //glEnable(GL_CULL_FACE);
+    //glCullFace(GL_BACK);
+    //glFrontFace(GL_CW);
+    glEnable(GL_DEPTH_TEST);
 
     // Set up shaders
     Shader colorShader("shaders/color.vert", "shaders/color.frag");
@@ -77,15 +78,60 @@ int main()
 
     // Second rectangle vertex data
     float secondRectangleVertices[] = {
-         0.5f,  0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
-         0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
-        -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-        -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top left 
-    };
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 
-    unsigned int secondRectangleIndices[] = {
-        0, 1, 3,   // first triangle
-        1, 2, 3    // second triangle
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+};
+
+    glm::vec3 cubePositions[] = {
+    glm::vec3(0.0f,  0.0f,  0.0f),
+    glm::vec3(2.0f,  5.0f, -15.0f),
+    glm::vec3(-1.5f, -2.2f, -2.5f),
+    glm::vec3(-3.8f, -2.0f, -12.3f),
+    glm::vec3(2.4f, -0.4f, -3.5f),
+    glm::vec3(-1.7f,  3.0f, -7.5f),
+    glm::vec3(1.3f, -2.0f, -2.5f),
+    glm::vec3(1.5f,  2.0f, -2.5f),
+    glm::vec3(1.5f,  0.2f, -1.5f),
+    glm::vec3(-1.3f,  1.0f, -1.5f)
     };
 
     // Vertex attribute object
@@ -123,23 +169,19 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(secondRectangleVertices), secondRectangleVertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
     // 3. copy our index array in a element buffer for OpenGL to use
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[1]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(secondRectangleIndices), secondRectangleIndices, GL_STATIC_DRAW);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[1]);
+    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(secondRectangleIndices), secondRectangleIndices, GL_STATIC_DRAW);
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -147,15 +189,20 @@ int main()
     textureShader.setInt("tex1", 0);
     textureShader.setInt("tex2", 1);
 
-    float timeValue, greenValue;
-    int vertexColorLocation;
+    containerTex.activate(0);
+    guyTex.activate(1);
+
+    glm::mat4 projection;
+    projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+    textureShader.setMat4fv("projection", &projection);
+
     while (!glfwWindowShouldClose(window))
     {
         processInput(window);
 
         // Background
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Orange rect
         //uniformShader.use();
@@ -169,27 +216,37 @@ int main()
         //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[0]);
         //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        glm::mat4 transform(1.0f);
-        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
-        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-        textureShader.setMat4fv("transform", &transform);
+        //glm::mat4 transform(1.0f);
+        //transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+        //transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(1.0f, 0.0f, 0.0f));
+        //transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 0.0f));
+        //textureShader.setMat4fv("transform", &transform);
 
         // Yellow rect
-        textureShader.setFloat("mixValue", mixValue);
-        containerTex.activate(0);
-        guyTex.activate(1);
         glBindVertexArray(VAOs[1]);
+        float mod = glfwGetTime();
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[1]);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glm::mat4 view = glm::mat4(1.0f);
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        view = glm::rotate(view, glm::radians(360.0f * worldy), glm::vec3(0.0f, 1.0f, 0.0f));
+        view = glm::rotate(view, glm::radians(360.0f * worldx), glm::vec3(1.0f, 0.0f, 0.0f));
+        textureShader.setMat4fv("view", &view);
 
-        glm::mat4 trans2(1.0f);
-        trans2 = glm::translate(trans2, glm::vec3(-0.5f, 0.5f, 0.0f));
-        float scale = 0.5f * (float)glm::sin(4 * glfwGetTime()) + 1.0f;
-        trans2 = glm::scale(trans2, glm::vec3(scale, scale, 1.0));
-        textureShader.setMat4fv("transform", &trans2);
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::rotate(model, glm::radians(25.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(.5f, .5f, .5f));
+        textureShader.setMat4fv("model", &model);
+
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        glm::mat4 model2 = glm::mat4(1.0f);
+        model2 = glm::rotate(model2, glm::radians(90 * mod),glm::vec3(0.0f, 1.0f, 0.0));
+        model2 = glm::translate(model2, glm::vec3(1.0,0.0f,0.0f));
+        model2 = glm::rotate(model2, glm::radians(60 * mod), glm::vec3(0.0f, 1.0, 0.0));
+        model2 = glm::scale(model2, glm::vec3(.3f, .3f, .3f));
+        textureShader.setMat4fv("model", &model2);
         
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -217,11 +274,18 @@ void processInput(GLFWwindow* window)
         glfwSetWindowShouldClose(window, true);
     
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-        if (mixValue < 1.0f)
-            mixValue += 0.0001f;
+        if (worldx > -1.0f)
+            worldx -= 0.00002f;
 
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        if (mixValue > 0.0f)
-            mixValue -= 0.0001f;
-        
+        if (worldx < 1.0f)
+            worldx += 0.00002f;
+
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+        if (worldy > -1.0f)
+            worldy -= 0.00002f;
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+        if (worldy < 1.0f)
+            worldy += 0.00002f;
 }
