@@ -7,11 +7,46 @@
 #include <texture.h>
 #include <iostream>
 
+constexpr float CAMERA_SPEED = 2.5f;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void processInput(GLFWwindow* window);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
-float worldx = 0.00f, worldy = 0.00f, worldz = 0;
+struct {
+    float delta = 0.0f;
+    float last = 0.0f;
+    float current = 0.0f;
+} frameTime;
+
+struct {
+    glm::vec3 pos = glm::vec3(0.0f, 0.0f, 3.0f);
+    glm::vec3 front = glm::vec3(0.0f, 0.0f, -1.0f);
+    glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    float speed = CAMERA_SPEED;
+    glm::vec3 direction = glm::vec3(0.0f,0.0f,0.0f);
+    float pitch = 0.0f;
+    float yaw = -90.0f;
+    float fov = 45.0f;
+} camera;
+
+struct {
+    int height = 600;
+    int width = 800;
+} windowDimensions;
+
+struct {
+    float lastx = (float) windowDimensions.width / 2;
+    float lasty = (float)windowDimensions.height / 2;
+    float x = (float) windowDimensions.width / 2;
+    float y = (float) windowDimensions.height / 2;
+    float sensitivity = 0.1f;
+} mouse;
+
+bool firstMouse = true;
+bool flightMode = false;
 
 int main()
 {
@@ -19,6 +54,7 @@ int main()
         std::cout << "ERROR::GLFW::INIT_FAILED\n" << stderr << std::endl;
         return 1;
     }
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -28,22 +64,26 @@ int main()
     #endif
 
     // Create glfw window
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Jefe", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(windowDimensions.width, windowDimensions.height, "Jefe", NULL, NULL);
     if (window == NULL)
     {
-        std::cout << "ERROR::GLFW::WINDOW::CREATION_FAILED" << std::endl;
+        std::cout << "ERROR::GLFW::WINDOW::CREA TION_FAILED" << std::endl;
         glfwTerminate();
         return -1;
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
     // Load OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cout << "ERROR::GLAD::INITALIZATION_FAILED" << std::endl;
         return -1;
     }
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetKeyCallback(window, key_callback);
 
     int nrAttributes;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
@@ -192,12 +232,11 @@ int main()
     containerTex.activate(0);
     guyTex.activate(1);
 
-    glm::mat4 projection;
-    projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-    textureShader.setMat4fv("projection", &projection);
-
     while (!glfwWindowShouldClose(window))
     {
+        frameTime.current = glfwGetTime();
+        frameTime.delta = frameTime.current - frameTime.last;
+
         processInput(window);
 
         // Background
@@ -224,25 +263,23 @@ int main()
 
         // Yellow rect
         glBindVertexArray(VAOs[1]);
-        float mod = glfwGetTime();
 
-        glm::mat4 view = glm::mat4(1.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-        view = glm::rotate(view, glm::radians(360.0f * worldy), glm::vec3(0.0f, 1.0f, 0.0f));
-        view = glm::rotate(view, glm::radians(360.0f * worldx), glm::vec3(1.0f, 0.0f, 0.0f));
+        glm::mat4 view = glm::lookAt(camera.pos, camera.pos + camera.front, camera.worldUp);
         textureShader.setMat4fv("view", &view);
 
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::radians(25.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(.5f, .5f, .5f));
         textureShader.setMat4fv("model", &model);
+
+        glm::mat4 projection;
+        projection = glm::perspective(glm::radians(camera.fov), (float)windowDimensions.width / (float)windowDimensions.height, 0.1f, 100.0f);
+        textureShader.setMat4fv("projection", &projection);
 
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         glm::mat4 model2 = glm::mat4(1.0f);
-        model2 = glm::rotate(model2, glm::radians(90 * mod),glm::vec3(0.0f, 1.0f, 0.0));
+        model2 = glm::rotate(model2, glm::radians(90 * frameTime.current),glm::vec3(0.0f, 1.0f, 0.0));
         model2 = glm::translate(model2, glm::vec3(1.0,0.0f,0.0f));
-        model2 = glm::rotate(model2, glm::radians(60 * mod), glm::vec3(0.0f, 1.0, 0.0));
+        model2 = glm::rotate(model2, glm::radians(60 * frameTime.current), glm::vec3(0.0f, 1.0, 0.0));
         model2 = glm::scale(model2, glm::vec3(.3f, .3f, .3f));
         textureShader.setMat4fv("model", &model2);
         
@@ -250,6 +287,7 @@ int main()
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+        frameTime.last = frameTime.current;
     }
 
     glDeleteVertexArrays(2, VAOs);
@@ -265,27 +303,95 @@ int main()
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
+    windowDimensions.width = width;
+    windowDimensions.height = height;
     glViewport(0, 0, width, height);
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    if (firstMouse)
+    {
+        mouse.lastx = xpos;
+        mouse.lasty = ypos;
+        firstMouse = false;
+    }
+
+    mouse.x = xpos;
+    mouse.y = ypos;
+
+    float xoffest = (mouse.x - mouse.lastx) * mouse.sensitivity;
+    float yoffset = (mouse.lasty - mouse.y) * mouse.sensitivity;
+
+    camera.yaw += xoffest;
+    camera.pitch += yoffset;
+
+    if (camera.pitch > 89.0f)
+        camera.pitch = 89.0f;
+    if (camera.pitch < -89.0f)
+        camera.pitch = -89.0f;
+
+    glm::vec3 direction;
+    direction.x = glm::cos(glm::radians(camera.yaw)) * glm::cos(glm::radians(camera.pitch)); // ...* glm::cos(camera.yaw) does not make sense to me. As far as I can tell the same rule would apply to the calculation of y
+    direction.y = glm::sin(glm::radians(camera.pitch));
+    direction.z = glm::sin(glm::radians(camera.yaw)) * glm::cos(glm::radians(camera.pitch));
+    
+    camera.front = glm::normalize(direction);
+    mouse.lastx = mouse.x;
+    mouse.lasty = mouse.y;
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    camera.fov -= (float)yoffset;
+    if (camera.fov < 1.0f)
+        camera.fov = 1.0f;
+    if (camera.fov > 90.0f)
+        camera.fov = 90.0f;
 }
 
 void processInput(GLFWwindow* window)
 {
+    float deltaSpeed = camera.speed * frameTime.delta;
+    float camPrevY = camera.pos.y;
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-        if (worldx > -1.0f)
-            worldx -= 0.00002f;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.pos += camera.front * deltaSpeed;
 
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        if (worldx < 1.0f)
-            worldx += 0.00002f;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.pos -= glm::normalize(glm::cross(camera.front, camera.worldUp)) * deltaSpeed;
 
-    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        if (worldy > -1.0f)
-            worldy -= 0.00002f;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.pos -= camera.front * deltaSpeed;
 
-    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        if (worldy < 1.0f)
-            worldy += 0.00002f;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.pos += glm::normalize(glm::cross(camera.front, camera.worldUp)) * deltaSpeed;
+    
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        camera.pos += camera.worldUp * deltaSpeed;
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        camera.pos -= camera.worldUp * deltaSpeed;
+
+    if (!flightMode) {
+        camera.pos.y = camPrevY;
+    }
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_Q && action == GLFW_PRESS)
+    {
+        flightMode = !flightMode;
+    }
+    if (key == GLFW_KEY_LEFT_SHIFT) {
+        if (action == GLFW_PRESS) {
+            camera.speed = 6.0f;
+        }
+        if (action == GLFW_RELEASE) {
+            camera.speed = CAMERA_SPEED;
+        }
+    }
 }
