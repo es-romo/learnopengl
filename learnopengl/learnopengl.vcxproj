@@ -143,6 +143,7 @@
     <None Include="shaders\uniform.frag" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\camera.h" />
     <ClInclude Include="headers\shader.h" />
     <ClInclude Include="headers\stb_image.h" />
     <ClInclude Include="headers\texture.h" />

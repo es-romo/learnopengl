@@ -49,6 +49,9 @@
     <ClInclude Include="headers\texture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="headers\camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\container.jpg">

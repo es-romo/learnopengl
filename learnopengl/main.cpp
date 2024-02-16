@@ -5,9 +5,8 @@
 #include <GLFW/glfw3.h>
 #include <shader.h>
 #include <texture.h>
+#include <camera.h>
 #include <iostream>
-
-constexpr float CAMERA_SPEED = 2.5f;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -19,18 +18,7 @@ struct {
     float delta = 0.0f;
     float last = 0.0f;
     float current = 0.0f;
-} frameTime;
-
-struct {
-    glm::vec3 pos = glm::vec3(0.0f, 0.0f, 3.0f);
-    glm::vec3 front = glm::vec3(0.0f, 0.0f, -1.0f);
-    glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    float speed = CAMERA_SPEED;
-    glm::vec3 direction = glm::vec3(0.0f,0.0f,0.0f);
-    float pitch = 0.0f;
-    float yaw = -90.0f;
-    float fov = 45.0f;
-} camera;
+} gameTime;
 
 struct {
     int height = 600;
@@ -45,8 +33,9 @@ struct {
     float sensitivity = 0.1f;
 } mouse;
 
+
 bool firstMouse = true;
-bool flightMode = false;
+Camera cam(glm::vec3(0.0f,0.0f,3.0f));
 
 int main()
 {
@@ -234,8 +223,8 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
-        frameTime.current = glfwGetTime();
-        frameTime.delta = frameTime.current - frameTime.last;
+        gameTime.current = glfwGetTime();
+        gameTime.delta = gameTime.current - gameTime.last;
 
         processInput(window);
 
@@ -243,43 +232,25 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Orange rect
-        //uniformShader.use();
-        //glBindVertexArray(VAOs[0]);
-        //
-        //timeValue = glfwGetTime();
-        //greenValue = sin(timeValue) / 2.0f + 0.5f;
-        //
-        //uniformShader.setVec4f("color", 0.0f, greenValue, 0.0f, 1.0f);
-
-        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[0]);
-        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-        //glm::mat4 transform(1.0f);
-        //transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
-        //transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(1.0f, 0.0f, 0.0f));
-        //transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 0.0f));
-        //textureShader.setMat4fv("transform", &transform);
-
-        // Yellow rect
         glBindVertexArray(VAOs[1]);
 
-        glm::mat4 view = glm::lookAt(camera.pos, camera.pos + camera.front, camera.worldUp);
+        glm::mat4 view;
+        cam.getViewMatrix(&view);
         textureShader.setMat4fv("view", &view);
 
         glm::mat4 model = glm::mat4(1.0f);
         textureShader.setMat4fv("model", &model);
 
         glm::mat4 projection;
-        projection = glm::perspective(glm::radians(camera.fov), (float)windowDimensions.width / (float)windowDimensions.height, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(cam.fov), (float)windowDimensions.width / (float)windowDimensions.height, 0.1f, 100.0f);
         textureShader.setMat4fv("projection", &projection);
 
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         glm::mat4 model2 = glm::mat4(1.0f);
-        model2 = glm::rotate(model2, glm::radians(90 * frameTime.current),glm::vec3(0.0f, 1.0f, 0.0));
+        model2 = glm::rotate(model2, glm::radians(90 * gameTime.current),glm::vec3(0.0f, 1.0f, 0.0));
         model2 = glm::translate(model2, glm::vec3(1.0,0.0f,0.0f));
-        model2 = glm::rotate(model2, glm::radians(60 * frameTime.current), glm::vec3(0.0f, 1.0, 0.0));
+        model2 = glm::rotate(model2, glm::radians(60 * gameTime.current), glm::vec3(0.0f, 1.0, 0.0));
         model2 = glm::scale(model2, glm::vec3(.3f, .3f, .3f));
         textureShader.setMat4fv("model", &model2);
         
@@ -287,7 +258,7 @@ int main()
 
         glfwSwapBuffers(window);
         glfwPollEvents();
-        frameTime.last = frameTime.current;
+        gameTime.last = gameTime.current;
     }
 
     glDeleteVertexArrays(2, VAOs);
@@ -319,79 +290,58 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     mouse.x = xpos;
     mouse.y = ypos;
 
-    float xoffest = (mouse.x - mouse.lastx) * mouse.sensitivity;
-    float yoffset = (mouse.lasty - mouse.y) * mouse.sensitivity;
+    float yaw = (mouse.x - mouse.lastx) * mouse.sensitivity;
+    float pitch = (mouse.lasty - mouse.y) * mouse.sensitivity;
 
-    camera.yaw += xoffest;
-    camera.pitch += yoffset;
-
-    if (camera.pitch > 89.0f)
-        camera.pitch = 89.0f;
-    if (camera.pitch < -89.0f)
-        camera.pitch = -89.0f;
-
-    glm::vec3 direction;
-    direction.x = glm::cos(glm::radians(camera.yaw)) * glm::cos(glm::radians(camera.pitch)); // ...* glm::cos(camera.yaw) does not make sense to me. As far as I can tell the same rule would apply to the calculation of y
-    direction.y = glm::sin(glm::radians(camera.pitch));
-    direction.z = glm::sin(glm::radians(camera.yaw)) * glm::cos(glm::radians(camera.pitch));
-    
-    camera.front = glm::normalize(direction);
     mouse.lastx = mouse.x;
     mouse.lasty = mouse.y;
+
+    cam.processLook(yaw, pitch);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    camera.fov -= (float)yoffset;
-    if (camera.fov < 1.0f)
-        camera.fov = 1.0f;
-    if (camera.fov > 90.0f)
-        camera.fov = 90.0f;
+    cam.processZoom(-(float)yoffset);
 }
 
 void processInput(GLFWwindow* window)
 {
-    float deltaSpeed = camera.speed * frameTime.delta;
-    float camPrevY = camera.pos.y;
 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.pos += camera.front * deltaSpeed;
+        cam.processMovement(Camera::actions::FORWARD, gameTime.delta);
 
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.pos -= glm::normalize(glm::cross(camera.front, camera.worldUp)) * deltaSpeed;
+        cam.processMovement(Camera::actions::LEFT, gameTime.delta);
 
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.pos -= camera.front * deltaSpeed;
+        cam.processMovement(Camera::actions::BACKWARD, gameTime.delta);
 
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.pos += glm::normalize(glm::cross(camera.front, camera.worldUp)) * deltaSpeed;
+        cam.processMovement(Camera::actions::RIGHT, gameTime.delta);
     
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        camera.pos += camera.worldUp * deltaSpeed;
+        cam.processMovement(Camera::actions::WORLD_UP, gameTime.delta);
 
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        camera.pos -= camera.worldUp * deltaSpeed;
-
-    if (!flightMode) {
-        camera.pos.y = camPrevY;
-    }
+        cam.processMovement(Camera::actions::WORLD_DOWN, gameTime.delta);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_Q && action == GLFW_PRESS)
     {
-        flightMode = !flightMode;
+        if (cam.mode == CAMERA_MODE_FPS) cam.mode = CAMERA_MODE_DRONE;
+        else if (cam.mode == CAMERA_MODE_DRONE) cam.mode = CAMERA_MODE_FPS;
     }
     if (key == GLFW_KEY_LEFT_SHIFT) {
         if (action == GLFW_PRESS) {
-            camera.speed = 6.0f;
+            cam.speed = CAMERA_BOOST_SPEED;
         }
         if (action == GLFW_RELEASE) {
-            camera.speed = CAMERA_SPEED;
+            cam.speed = CAMERA_SPEED;
         }
     }
 }
