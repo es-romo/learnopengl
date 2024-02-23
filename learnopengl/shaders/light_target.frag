@@ -19,7 +19,7 @@ void main()
 	float diffuse = max(dot(norm, lightDir), 0.0) * diffuseStrength;
 
 	float specularStrength = 0.5;
-	vec3 viewDir = normalize(viewPos - fragPos);
+	vec3 viewDir = normalize(-fragPos);
 	vec3 reflectDir = reflect(-lightDir, norm);
 	float specular = pow(max(dot(viewDir, reflectDir), 0.0), 64) * specularStrength;
 

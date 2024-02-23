@@ -293,7 +293,7 @@ int main()
         model2 = glm::rotate(model2, glm::radians(60 * gameTime.current), glm::vec3(0.0f, 1.0, 0.0));
         model2 = glm::scale(model2, glm::vec3(.2f, .2f, .2f));
 
-        glm::vec4 lightPos = model2 * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        glm::vec4 lightPos = view * model2 * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
         lightSourceShader.use();
 
