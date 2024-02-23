@@ -10,7 +10,7 @@
 #define CAMERA_BOOST_SPEED CAMERA_SPEED * 2
 
 const float D_PITCH = 0.0f;
-const float D_YAW = -90.0f;
+const float D_YAW = 0.0f;
 const float D_SPEED = CAMERA_SPEED;
 const float D_SENSITIVITY = 0.1f;
 const float D_FOV = 45.0f;
@@ -23,6 +23,7 @@ public:
     glm::vec3 worldUp;
     glm::vec3 up;
     glm::vec3 right;
+    glm::vec3 target;
     float speed;
     float pitch;
     float yaw;
@@ -34,7 +35,7 @@ public:
         float max = 90.0f;
     } zoom;
 
-    enum actions {
+    enum class Action {
         FORWARD,
         BACKWARD,
         LEFT,
@@ -43,7 +44,7 @@ public:
         WORLD_DOWN
     };
 
-	Camera(glm::vec3 position, glm::vec3 worldUp = glm::vec3(0.0f,1.0f,0.0f), float fov = D_FOV, float speed = D_SPEED, int mode = CAMERA_MODE_FPS, float yaw = D_YAW, float pitch = D_PITCH) : front(D_FRONT) {
+	Camera(glm::vec3 position, glm::vec3 worldUp = glm::vec3(0.0f,1.0f,0.0f), float fov = D_FOV, float speed = D_SPEED, int mode = CAMERA_MODE_FPS, float yaw = D_YAW, float pitch = D_PITCH) {
         this->position = position;
         this->worldUp = worldUp;
         this->yaw = yaw;
@@ -54,34 +55,34 @@ public:
         updateVectors();
 	}
 
-    void getViewMatrix(glm::mat4* matrix) const{
-        *matrix = glm::lookAt(position, position + front, worldUp);
+    glm::mat4 getViewMatrix() const{
+        return glm::lookAt(position, position + front, worldUp);
     }
 
-    void processMovement(actions action, float deltaTime) {
+    void processMovement(Action action, float deltaTime) {
         float deltaSpeed = speed * deltaTime;
         float prevy = position.y;
 
         switch (action)
         {
-            case FORWARD:
-                position += front * deltaSpeed;
-                break;
-            case BACKWARD:
-                position -= front * deltaSpeed;
-                break;
-            case LEFT:
-                position -= right * deltaSpeed;
-                break;
-            case RIGHT:
-                position += right * deltaSpeed;
-                break;
-            case WORLD_UP:
-                position += worldUp * deltaSpeed;
-                break;
-            case WORLD_DOWN:
-                position -= worldUp * deltaSpeed;
-                break;
+        case Action::FORWARD:
+            position += front * deltaSpeed;
+            break;
+        case Action::BACKWARD:
+            position -= front * deltaSpeed;
+            break;
+        case Action::LEFT:
+            position -= right * deltaSpeed;
+            break;
+        case Action::RIGHT:
+            position += right * deltaSpeed;
+            break;
+        case Action::WORLD_UP:
+            position += worldUp * deltaSpeed;
+            break;
+        case Action::WORLD_DOWN:
+            position -= worldUp * deltaSpeed;
+            break;
         }
 
         if (mode == CAMERA_MODE_FPS) {
@@ -106,7 +107,7 @@ public:
         if (fov > zoom.max)
             fov = zoom.max;
     }
-
+        
 private:
     void updateVectors() {
         glm::vec3 newFront;

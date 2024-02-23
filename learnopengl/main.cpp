@@ -35,7 +35,7 @@ struct {
 
 
 bool firstMouse = true;
-Camera cam(glm::vec3(0.0f,0.0f,3.0f));
+Camera camera(glm::vec3(-3.0f, 0.0f, 0.0f));
 
 int main()
 {
@@ -85,10 +85,11 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     // Set up shaders
-    Shader colorShader("shaders/color.vert", "shaders/color.frag");
-    Shader uniformShader("shaders/color.vert", "shaders/uniform.frag");
-    Shader textureShader("shaders/color.vert", "shaders/texture.frag");
-
+    //Shader colorShader("shaders/color.vert", "shaders/color.frag");
+    //Shader uniformShader("shaders/color.vert", "shaders/uniform.frag");
+    Shader textureShader("shaders/texture.vert", "shaders/texture.frag");
+    Shader lightSourceShader("shaders/light_source.vert", "shaders/light_source.frag");
+    Shader lightTargetShader("shaders/light_target.vert", "shaders/light_target.frag");
     Texture containerTex("resources/container.jpg", false, false);
     Texture guyTex("resources/awesomeface.png", true, true);
 
@@ -106,61 +107,105 @@ int main()
     };
 
     // Second rectangle vertex data
-    float secondRectangleVertices[] = {
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+    //float secondRectangleVertices[] = {
+    //    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+    //     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+    //     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    //     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    //    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+    //    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    //    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    //     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+    //     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+    //     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+    //    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+    //    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
 
-    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    //    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    //    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    //    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    //    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    //    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    //    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    //     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    //     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    //     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    //     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    //     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    //     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    //    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    //     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+    //     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+    //     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+    //    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    //    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
 
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-};
+    //    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+    //     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    //     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    //     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    //    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+    //    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+    //};
+
+    float cubeVertices[] = {
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+    };
 
     glm::vec3 cubePositions[] = {
-    glm::vec3(0.0f,  0.0f,  0.0f),
-    glm::vec3(2.0f,  5.0f, -15.0f),
-    glm::vec3(-1.5f, -2.2f, -2.5f),
-    glm::vec3(-3.8f, -2.0f, -12.3f),
-    glm::vec3(2.4f, -0.4f, -3.5f),
-    glm::vec3(-1.7f,  3.0f, -7.5f),
-    glm::vec3(1.3f, -2.0f, -2.5f),
-    glm::vec3(1.5f,  2.0f, -2.5f),
-    glm::vec3(1.5f,  0.2f, -1.5f),
-    glm::vec3(-1.3f,  1.0f, -1.5f)
+        glm::vec3(0.0f,  0.0f,  0.0f),
+        glm::vec3(2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3(2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3(1.3f, -2.0f, -2.5f),
+        glm::vec3(1.5f,  2.0f, -2.5f),
+        glm::vec3(1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f)
     };
 
     // Vertex attribute object
@@ -179,7 +224,7 @@ int main()
     // 2. copy our vertices array in a vertex buffer for OpenGL to use
     glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(firstRectangleVertices), firstRectangleVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), NULL);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     // 3. copy our index array in a element buffer for OpenGL to use
@@ -196,12 +241,12 @@ int main()
 
     // 2. copy our vertices array in a vertex buffer for OpenGL to use
     glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(secondRectangleVertices), secondRectangleVertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     // 3. copy our index array in a element buffer for OpenGL to use
@@ -221,6 +266,8 @@ int main()
     containerTex.activate(0);
     guyTex.activate(1);
 
+    glfwSetTime(0);
+
     while (!glfwWindowShouldClose(window))
     {
         gameTime.current = glfwGetTime();
@@ -234,26 +281,41 @@ int main()
 
         glBindVertexArray(VAOs[1]);
 
-        glm::mat4 view;
-        cam.getViewMatrix(&view);
-        textureShader.setMat4fv("view", &view);
+        glm::mat4 view = camera.getViewMatrix();
 
-        glm::mat4 model = glm::mat4(1.0f);
-        textureShader.setMat4fv("model", &model);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.fov), (float)windowDimensions.width / (float)windowDimensions.height, 0.1f, 100.0f);
 
-        glm::mat4 projection;
-        projection = glm::perspective(glm::radians(cam.fov), (float)windowDimensions.width / (float)windowDimensions.height, 0.1f, 100.0f);
-        textureShader.setMat4fv("projection", &projection);
-
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        //glm::mat4 projection = glm::ortho(0.0f, 3.0f, 2.0f, 0.0f, .01f, 100.0f);
 
         glm::mat4 model2 = glm::mat4(1.0f);
         model2 = glm::rotate(model2, glm::radians(90 * gameTime.current),glm::vec3(0.0f, 1.0f, 0.0));
         model2 = glm::translate(model2, glm::vec3(1.0,0.0f,0.0f));
         model2 = glm::rotate(model2, glm::radians(60 * gameTime.current), glm::vec3(0.0f, 1.0, 0.0));
-        model2 = glm::scale(model2, glm::vec3(.3f, .3f, .3f));
+        model2 = glm::scale(model2, glm::vec3(.2f, .2f, .2f));
+
+        glm::vec4 lightPos = model2 * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+        lightSourceShader.use();
+
         textureShader.setMat4fv("model", &model2);
-        
+        lightSourceShader.setMat4fv("view", &view);
+        lightSourceShader.setMat4fv("projection", &projection);
+
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        lightTargetShader.use();
+        glm::mat4 model = glm::mat4(1.0f);
+        //model = glm::rotate(model, glm::radians(-15 * gameTime.current), glm::vec3(0.0f, 1.0f, 0.0));
+
+        lightTargetShader.setVec3f("lightColor", 1.0f, 1.0f, 1.0f);
+        lightTargetShader.setVec3f("objectColor", 1.0f, 0.0f, 0.0f);
+
+        lightTargetShader.setMat4fv("model", &model);
+        lightTargetShader.setMat4fv("view", &view);
+        lightTargetShader.setMat4fv("projection", &projection);
+        lightTargetShader.setVec3f("lightPos", lightPos.x, lightPos.y, lightPos.z);
+        lightTargetShader.setVec3f("viewPos", camera.position);
+
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         glfwSwapBuffers(window);
@@ -265,8 +327,11 @@ int main()
     glDeleteBuffers(2, VBOs);
     glDeleteBuffers(2, EBOs);
 
-    uniformShader.del();
-    colorShader.del();
+    //uniformShader.del();
+    //colorShader.del();
+    textureShader.del();
+    lightSourceShader.del();
+    lightTargetShader.del();
 
     glfwTerminate();
     return 0;
@@ -296,52 +361,51 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     mouse.lastx = mouse.x;
     mouse.lasty = mouse.y;
 
-    cam.processLook(yaw, pitch);
+    camera.processLook(yaw, pitch);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    cam.processZoom(-(float)yoffset);
+    camera.processZoom(-(float)yoffset);
 }
 
 void processInput(GLFWwindow* window)
 {
-
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cam.processMovement(Camera::actions::FORWARD, gameTime.delta);
+        camera.processMovement(Camera::Action::FORWARD, gameTime.delta);
 
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cam.processMovement(Camera::actions::LEFT, gameTime.delta);
+        camera.processMovement(Camera::Action::LEFT, gameTime.delta);
 
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cam.processMovement(Camera::actions::BACKWARD, gameTime.delta);
+        camera.processMovement(Camera::Action::BACKWARD, gameTime.delta);
 
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cam.processMovement(Camera::actions::RIGHT, gameTime.delta);
-    
+        camera.processMovement(Camera::Action::RIGHT, gameTime.delta);
+
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        cam.processMovement(Camera::actions::WORLD_UP, gameTime.delta);
+        camera.processMovement(Camera::Action::WORLD_UP, gameTime.delta);
 
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        cam.processMovement(Camera::actions::WORLD_DOWN, gameTime.delta);
+        camera.processMovement(Camera::Action::WORLD_DOWN, gameTime.delta);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_Q && action == GLFW_PRESS)
     {
-        if (cam.mode == CAMERA_MODE_FPS) cam.mode = CAMERA_MODE_DRONE;
-        else if (cam.mode == CAMERA_MODE_DRONE) cam.mode = CAMERA_MODE_FPS;
+        if (camera.mode == CAMERA_MODE_FPS) camera.mode = CAMERA_MODE_DRONE;
+        else if (camera.mode == CAMERA_MODE_DRONE) camera.mode = CAMERA_MODE_FPS;
     }
     if (key == GLFW_KEY_LEFT_SHIFT) {
         if (action == GLFW_PRESS) {
-            cam.speed = CAMERA_BOOST_SPEED;
+            camera.speed = CAMERA_BOOST_SPEED;
         }
         if (action == GLFW_RELEASE) {
-            cam.speed = CAMERA_SPEED;
+            camera.speed = CAMERA_SPEED;
         }
     }
 }

@@ -138,7 +138,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\color.frag" />
-    <None Include="shaders\color.vert" />
+    <None Include="shaders\light_target.frag" />
+    <None Include="shaders\light_target.vert" />
+    <None Include="shaders\light_source.frag" />
+    <None Include="shaders\light_source.vert" />
+    <None Include="shaders\texture.vert" />
     <None Include="shaders\texture.frag" />
     <None Include="shaders\uniform.frag" />
   </ItemGroup>

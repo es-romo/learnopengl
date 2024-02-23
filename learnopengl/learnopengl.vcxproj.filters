@@ -26,7 +26,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\color.vert">
+    <None Include="shaders\texture.vert">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="shaders\uniform.frag">
@@ -36,6 +36,18 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="shaders\texture.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\light_target.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\light_target.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\light_source.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\light_source.vert">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
