@@ -151,10 +151,15 @@
     <ClInclude Include="headers\shader.h" />
     <ClInclude Include="headers\stb_image.h" />
     <ClInclude Include="headers\texture.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\awesomeface.png" />
     <Image Include="resources\container.jpg" />
+    <Image Include="resources\container2.png" />
+    <Image Include="resources\container2_specular.png" />
+    <Image Include="resources\emission2.png" />
+    <Image Include="resources\matrix.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
