@@ -303,35 +303,58 @@ int main()
         model2 = glm::rotate(model2, glm::radians(60 * gameTime.current), glm::vec3(0.0f, 1.0, 0.0));
         model2 = glm::scale(model2, glm::vec3(.2f, .2f, .2f));
 
-        glm::vec4 lightPos = view * model2 * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        glm::vec4 lightPos = model2 * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
         lightSourceShader.use();
 
-        lightSourceShader.setMat4fv("model", &model2);
-        lightSourceShader.setMat4fv("view", &view);
-        lightSourceShader.setMat4fv("projection", &projection);
+        glm::mat4 modelx = glm::mat4(1.0f);
+        modelx = glm::rotate(modelx, glm::radians(90 * gameTime.current), glm::vec3(0.0f, 1.0f, 0.0));
+        modelx = glm::translate(modelx, glm::vec3(5.0f, 1.5f, -1.0f));
+        modelx = glm::scale(modelx, glm::vec3(.2f, .2f, .2f));
+
+        glm::vec4 lightVector = modelx * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+        lightSourceShader.setMat4fv("model", modelx);
+
+        //lightSourceShader.setMat4fv("model", model2);
+        lightSourceShader.setMat4fv("view", view);
+        lightSourceShader.setMat4fv("projection", projection);
 
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         lightTargetShader.use();
-        glm::mat4 model = glm::mat4(1.0f);
+        //glm::mat4 model = glm::mat4(1.0f);
         //model = glm::rotate(model, glm::radians(-15 * gameTime.current), glm::vec3(0.0f, 1.0f, 0.0));
 
-        lightTargetShader.setMat4fv("model", &model);
-        lightTargetShader.setMat4fv("view", &view);
-        lightTargetShader.setMat4fv("projection", &projection);
-
-        lightTargetShader.setVec3f("light.position", lightPos.x, lightPos.y, lightPos.z);
+        //lightTargetShader.setVec4f("light.vector", lightPos);
+        //lightTargetShader.setVec4f("light.vector", glm::vec4(-camera.position, 0.0f));
+        lightTargetShader.setVec4f("light.vector", lightVector);
         lightTargetShader.setVec3f("light.ambient", 0.2f, 0.2f, 0.2f);
         lightTargetShader.setVec3f("light.diffuse", 0.5f, 0.5f, 0.5f); // darken diffuse light a bit
         lightTargetShader.setVec3f("light.specular", 1.0f, 1.0f, 1.0f);
+        lightTargetShader.setVec3f("viewPos", camera.position);
+        
+        lightTargetShader.setFloat("light.constant", 1.0f);
+        lightTargetShader.setFloat("light.linear", 0.027f);
+        lightTargetShader.setFloat("light.quadratic", 0.0028f);
         
         lightTargetShader.setInt("material.diffuse", 0);
         lightTargetShader.setInt("material.specular", 1);
         lightTargetShader.setInt("material.emission", 2);
         lightTargetShader.setFloat("material.shininess", 32.0f);
 
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        lightTargetShader.setMat4fv("view", view);
+        lightTargetShader.setMat4fv("projection", projection);
+
+        for (int i = 0; i < 10; i++)
+        {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);  
+            float angle = 20.0f * i;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            lightTargetShader.setMat4fv("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
